@@ -1,12 +1,14 @@
-name: Hourly AQI Inference
+name: AQI Model Training & Deployment
+
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs at the start of every hour
-  workflow_dispatch:      # Allows manual trigger
+    - cron: '0 2 * * *'   # Runs daily at 2:00 AM UTC for model retraining
+  workflow_dispatch:      # Manual trigger
 
 jobs:
-  run-inference:
+  train-and-upload:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -19,7 +21,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run Inference Pipeline
+      - name: Train & Evaluate Models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: python inference.py
+        run: |
+          echo "Running AQI model training..."
+          python train_daily_aqi.py   # Your training pipeline script
+
+      - name: Upload Updated Models to HF
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          echo "Uploading new models to Hugging Face..."
+          python upload_models_to_hf.py  # Only pushes new trained models
