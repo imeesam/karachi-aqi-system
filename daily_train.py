@@ -148,9 +148,9 @@ def train_models():
         # Save model and scaler locally
         timestamp = datetime.now().strftime('%Y%m%d_%H%M')
         
-        model_filename = f'best_model_day{day_num}_{timestamp}.pkl'
-        scaler_filename = f'scaler_day{day_num}_{timestamp}.pkl'
-        columns_filename = f'feature_columns_day{day_num}_{timestamp}.json'
+        model_filename = f'best_model_day{day_num}.pkl'
+        scaler_filename = f'scaler_day{day_num}.pkl'
+        columns_filename = f'feature_columns_day{day_num}.json'
         
         joblib.dump(best_model, model_filename)
         joblib.dump(scaler, scaler_filename)
@@ -160,10 +160,10 @@ def train_models():
         
         # Upload to Hugging Face
         api.upload_file(
-            path_or_fileobj=model_filename,
-            path_in_repo=f"models/best_model_day{day_num}.pkl",
-            repo_id=REPO_ID,
-            repo_type="model"
+                path_or_fileobj=model_filename,
+                path_in_repo=f"models/best_model_day{day_num}.pkl",  # Already correct!
+                repo_id=REPO_ID,
+                repo_type="model"
         )
         
         api.upload_file(

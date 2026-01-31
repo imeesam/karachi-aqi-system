@@ -101,38 +101,75 @@ def create_features():
     return features
 
 def load_model_and_scaler(day_num):
-    """Load model and scaler from Hugging Face"""
+    """Load the LATEST model and scaler from Hugging Face"""
     try:
-        # Load model
+        # First, get list of available files
+        api_url = f"https://huggingface.co/api/models/imeesam/karachi-aqi-predictor/tree/main/models"
+        response = requests.get(api_url, timeout=10)
+        
+        if response.status_code != 200:
+            logging.error(f"Failed to list files: {response.status_code}")
+            return None, None, None
+        
+        files = response.json()
+        
+        # Find the latest model file for this day
+        model_pattern = f"best_model_day{day_num}_"
+        scaler_pattern = f"scaler_day{day_num}_"
+        columns_pattern = f"feature_columns_day{day_num}_"
+        
+        model_files = [f for f in files if f.get('path', '').startswith(f'models/{model_pattern}')]
+        scaler_files = [f for f in files if f.get('path', '').startswith(f'models/{scaler_pattern}')]
+        columns_files = [f for f in files if f.get('path', '').startswith(f'models/{columns_pattern}')]
+        
+        if not model_files or not scaler_files or not columns_files:
+            logging.error(f"Could not find files for day {day_num}")
+            return None, None, None
+        
+        # Sort by timestamp (newest first)
+        model_files.sort(key=lambda x: x['path'], reverse=True)
+        scaler_files.sort(key=lambda x: x['path'], reverse=True)
+        columns_files.sort(key=lambda x: x['path'], reverse=True)
+        
+        # Get latest files
+        latest_model = model_files[0]['path']
+        latest_scaler = scaler_files[0]['path']
+        latest_columns = columns_files[0]['path']
+        
+        logging.info(f"Latest model for day {day_num}: {latest_model}")
+        
+        # Download files
         model_path = hf_hub_download(
             repo_id=REPO_ID,
-            filename=f"models/best_model_day{day_num}.pkl",
+            filename=latest_model,
             token=HF_TOKEN,
             repo_type="model"
         )
-        model = joblib.load(model_path)
         
-        # Load scaler
         scaler_path = hf_hub_download(
             repo_id=REPO_ID,
-            filename=f"models/scaler_day{day_num}.pkl",
+            filename=latest_scaler,
             token=HF_TOKEN,
             repo_type="model"
         )
-        scaler = joblib.load(scaler_path)
         
-        # Load feature columns
         columns_path = hf_hub_download(
             repo_id=REPO_ID,
-            filename=f"models/feature_columns_day{day_num}.json",
+            filename=latest_columns,
             token=HF_TOKEN,
             repo_type="model"
         )
+        
+        # Load them
+        model = joblib.load(model_path)
+        scaler = joblib.load(scaler_path)
+        
         with open(columns_path, 'r') as f:
             feature_columns = json.load(f)
         
         logging.info(f"Loaded model, scaler, and feature columns for day {day_num}")
         return model, scaler, feature_columns
+        
     except Exception as e:
         logging.error(f"Error loading model for day {day_num}: {e}")
         return None, None, None
