@@ -173,35 +173,42 @@ def update_dataset_with_new_data(features):
         dataset = load_dataset(DATA_REPO_ID)
         df = dataset['train'].to_pandas()
         
-        # Create new row
+        # Convert timestamp to consistent format
         dt = datetime.fromisoformat(features['timestamp'].replace('Z', '+00:00'))
-        timestamp_int = int(dt.timestamp())
         
+        # Create new row - ensure timestamp is int
         new_row = {
-            'id': len(df),
-            'timestamp': timestamp_int,
-            'aqi': features['aqi'],
-            'pm2_5': features['pm2_5'],
-            'hour': features['hour'],
-            'day_of_week': features['day_of_week'],
-            'month': features['month'],
-            'year': features['year'],
-            'aqi_yesterday': features['aqi_yesterday'],
-            'aqi_change_24h': features['aqi_change_24h'],
+            'id': int(len(df)),
+            'timestamp': int(dt.timestamp()),  # Ensure int
+            'aqi': int(features['aqi']),
+            'pm2_5': float(features['pm2_5']),
+            'hour': int(features['hour']),
+            'day_of_week': int(features['day_of_week']),
+            'month': int(features['month']),
+            'year': int(features['year']),
+            'aqi_yesterday': int(features['aqi_yesterday']),
+            'aqi_change_24h': int(features['aqi_change_24h']),
             'target_day1': None,
             'target_day2': None,
             'target_day3': None
         }
         
         # Add new row
-        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        new_df = pd.DataFrame([new_row])
+        df = pd.concat([df, new_df], ignore_index=True)
         
         # Update target values for old records
         updated_count = 0
-        current_ts = timestamp_int
+        current_ts = int(dt.timestamp())
         
         for idx, row in df.iterrows():
             row_ts = row['timestamp']
+            
+            # Ensure row_ts is int for comparison
+            if pd.isna(row_ts):
+                continue
+                
+            row_ts = int(float(row_ts))  # Convert to int
             
             # Calculate hours difference
             hours_diff = (current_ts - row_ts) / 3600
