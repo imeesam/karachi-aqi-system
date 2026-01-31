@@ -21,6 +21,7 @@ The project leverages these specific tools:
 * **Model Explainability:** [SHAP](https://shap.readthedocs.io/), [LIME](https://github.com/marcotcr/lime)
 * **Orchestration:** [Apache Airflow](https://airflow.apache.org/), [GitHub Actions](https://docs.github.com/en/actions)
 * **Dashboard & API:** [Streamlit](https://streamlit.io/), [Gradio](https://www.gradio.app/), [FastAPI](https://fastapi.tiangolo.com/)
+* **Documentation:** [Document](https://docs.google.com/document/d/1fCdXBpvRllxhjHpFGUZOcUC6sfv8qZS6sKpvcpLmhMU/edit?usp=sharing)
 
 ## Project Structure
 
